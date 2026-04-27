@@ -1,9 +1,16 @@
 import pandas as pd
-from sqlalchemy import create_engine
 from sklearn.linear_model import LinearRegression
 import joblib
+from pathlib import Path
+import sys
 
-engine = create_engine("postgresql+psycopg2://postgres:9913933238@localhost/demo")
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
+from scripts.db_connect import get_engine
+
+engine = get_engine()
 
 # Load data
 df = pd.read_sql("""
@@ -22,5 +29,6 @@ y = df['revenue']
 model = LinearRegression()
 model.fit(X, y)
 
-joblib.dump(model, "model/revenue_model.pkl")
+model_path = Path(__file__).resolve().with_name("revenue_model.pkl")
+joblib.dump(model, model_path)
 print("MODEL TRAINED & SAVED ✅")

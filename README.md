@@ -5,7 +5,7 @@
 
 # 📊 Smart Sales Analytics & Revenue Forecasting Platform
 
-An end-to-end enterprise-grade sales analytics system that performs real-time business intelligence and machine-learning-based revenue forecasting using PostgreSQL, Python, SQL, and Streamlit.
+An end-to-end enterprise-grade sales analytics system that performs real-time business intelligence and machine-learning-based revenue forecasting using MySQL/PostgreSQL, Python, SQL, and Streamlit.
 
 This project simulates how real companies build internal analytics products for management-level decision making.
 
@@ -35,7 +35,7 @@ This project simulates how real companies build internal analytics products for 
 
 ## 🛠 Tech Stack
 - Python 3.10+
-- PostgreSQL
+- MySQL or PostgreSQL
 - SQLAlchemy
 - Pandas
 - scikit-learn
@@ -71,7 +71,7 @@ Smart-Sales-Analytics/
 
 ## 📋 Prerequisites
 - Python 3.10+
-- PostgreSQL 13+
+- MySQL 8+ or PostgreSQL 13+
 - pip
 - Git
 
@@ -90,9 +90,61 @@ python -m venv .venv
 ### Install Dependencies
 pip install -r requirements.txt
 
+### Configure Database URL
+Set `DB_URL` as an environment variable (preferred):
+
+PowerShell:
+setx DB_URL "mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/demo"
+
+Or set it in `.streamlit/secrets.toml`:
+
+DB_URL="mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/demo"
+
+PostgreSQL example:
+
+DB_URL="postgresql+psycopg2://postgres:YOUR_PASSWORD@localhost:5432/demo"
+
+For Supabase pooling connections (PostgreSQL), use the exact pooler credentials from Supabase:
+- Host: `aws-<region>.pooler.supabase.com`
+- Port: usually `6543`
+- User: `postgres.<project_ref>`
+- Password: your database password
+- Include SSL (`?sslmode=require` or equivalent)
+
 ---
 
-## 🗄 PostgreSQL Setup
+## 🗄 MySQL Setup (Recommended)
+
+CREATE DATABASE demo;
+USE demo;
+
+CREATE TABLE customers (
+  customer_id INT PRIMARY KEY,
+  name VARCHAR(50),
+  city VARCHAR(50),
+  age INT
+);
+
+CREATE TABLE products (
+  product_id INT PRIMARY KEY,
+  product_name VARCHAR(50),
+  categoty VARCHAR(50),
+  price DECIMAL(10,2)
+);
+
+CREATE TABLE sales (
+  sale_id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT,
+  product_id INT,
+  quantity INT,
+  sale_date DATE,
+  FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+  FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+---
+
+## Optional PostgreSQL Setup
 
 CREATE DATABASE demo;
 

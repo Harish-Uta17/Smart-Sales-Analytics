@@ -4,9 +4,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import joblib
-from sqlalchemy import create_engine
+from sqlalchemy import text
 from datetime import datetime, timedelta
 import numpy as np
+
+from scripts.db_connect import get_engine
 
 # ==================== PAGE CONFIGURATION ====================
 st.set_page_config(
@@ -18,13 +20,11 @@ st.set_page_config(
 
 # ==================== DATABASE & MODEL INITIALIZATION ====================
 @st.cache_resource
-@st.cache_resource
 def init_connection():
-    return create_engine(
-        st.secrets["DB_URL"],
-        pool_pre_ping=True,
-        pool_recycle=300
-    )
+    engine = get_engine()
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    return engine
 
 
 @st.cache_resource
@@ -36,8 +36,32 @@ def load_model():
         st.warning("⚠️ Predictive model not found. Forecast features disabled.")
         return None
 
-engine = init_connection()
+try:
+    engine = init_connection()
+except Exception as exc:
+    st.error("Database connection failed. Check DB_URL and your database credentials.")
+    st.code(
+        'PowerShell: setx DB_URL "mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/demo"',
+        language="bash",
+    )
+    st.info("You can use MySQL, PostgreSQL, or Supabase as long as DB_URL is valid.")
+    st.markdown("Update [.streamlit/secrets.toml](.streamlit/secrets.toml) or set DB_URL as an environment variable.")
+    with st.expander("Connection diagnostics"):
+        st.text(str(exc))
+    st.stop()
+
 model = load_model()
+dialect_name = engine.dialect.name.lower()
+
+
+def month_group_expr(col_name: str = "sale_date") -> str:
+    """Return SQL month-grouping expression compatible with active database dialect."""
+    if dialect_name in {"mysql", "mariadb"}:
+        return f"DATE_FORMAT({col_name}, '%Y-%m-01')"
+    if dialect_name in {"postgresql", "postgres"}:
+        return f"DATE_TRUNC('month', {col_name})"
+    # SQLite fallback
+    return f"strftime('%Y-%m-01', {col_name})"
 
 # ==================== PROFESSIONAL STYLING ====================
 st.markdown("""
@@ -271,7 +295,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("<h3 style='color: #ffffff !important;'>📊 Dashboard Info</h3>", unsafe_allow_html=True)
-    st.info("Real-time analytics powered by PostgreSQL and ML forecasting")
+    st.info("Real-time analytics powered by SQL database and ML forecasting")
     
     st.markdown("---")
     st.markdown("""
@@ -301,7 +325,7 @@ def get_kpi_data(filter_sql):
             SUM(s.quantity * p.price) AS revenue,
             COUNT(DISTINCT s.customer_id) AS customers,
             SUM(s.quantity) AS total_quantity,
-            COUNT(DISTINCT s.sale_id) AS total_orders
+            COUNT(*) AS total_orders
         FROM sales s 
         JOIN products p ON s.product_id = p.product_id
         JOIN customers c ON s.customer_id = c.customer_id
@@ -364,9 +388,10 @@ with col1:
     
     @st.cache_data(ttl=300)
     def get_trend_data(filter_sql):
+        month_expr = month_group_expr("sale_date")
         return pd.read_sql(f"""
             SELECT 
-                DATE_TRUNC('month', sale_date) AS month,
+                {month_expr} AS month,
                 SUM(s.quantity * p.price) AS revenue
             FROM sales s 
             JOIN products p ON s.product_id = p.product_id
@@ -558,16 +583,17 @@ with tab2:
 with tab3:
     @st.cache_data(ttl=300)
     def get_category_trend():
+        month_expr = month_group_expr("sale_date")
         return pd.read_sql("""
             SELECT 
-                DATE_TRUNC('month', sale_date) AS month,
+                {month_expr} AS month,
                 p.categoty as category,
                 SUM(s.quantity * p.price) AS revenue
             FROM sales s 
             JOIN products p ON s.product_id = p.product_id
             GROUP BY month, category
             ORDER BY month, category
-        """, engine)
+        """.format(month_expr=month_expr), engine)
     
     cat_trend = get_category_trend()
     
@@ -672,6 +698,6 @@ st.markdown("---")
 st.markdown("""
     <div style='text-align: center; color: #e5e7eb; padding: 20px;'>
         <p>Enterprise Sales Analytics Platform | Powered by ML & Real-time Data</p>
-        <p style='font-size: 12px;'>Built with Streamlit • PostgreSQL • Plotly • Scikit-learn</p>
+        <p style='font-size: 12px;'>Built with Streamlit • MySQL/PostgreSQL • Plotly • Scikit-learn</p>
     </div>
 """, unsafe_allow_html=True)

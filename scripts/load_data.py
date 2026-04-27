@@ -1,8 +1,15 @@
 import pandas as pd
-import streamlit as st
-from sqlalchemy import create_engine
+from pathlib import Path
+import sys
 
-engine = create_engine(st.secrets["DB_URL"])
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
+from scripts.db_connect import get_engine
+
+engine = get_engine()
+replace_mode = engine.dialect.name == "sqlite"
 
 customers = pd.DataFrame({
     "customer_id":[1,2,3],
@@ -25,8 +32,10 @@ sales = pd.DataFrame({
     "sale_date":["2024-01-10","2024-01-12","2024-02-05","2024-02-20","2024-03-01"]
 })
 
-customers.to_sql("customers",engine,if_exists="append",index=False)
-products.to_sql("products",engine,if_exists="append",index=False)
-sales.to_sql("sales",engine,if_exists="append",index=False)
+write_mode = "replace" if replace_mode else "append"
 
-print("DATA INSERTED INTO SUPABASE SUCCESSFULLY")
+customers.to_sql("customers", engine, if_exists=write_mode, index=False)
+products.to_sql("products", engine, if_exists=write_mode, index=False)
+sales.to_sql("sales", engine, if_exists=write_mode, index=False)
+
+print("DATA INSERTED SUCCESSFULLY")
