@@ -27,10 +27,32 @@ def _demo_customers() -> pd.DataFrame:
 def _demo_products() -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "product_id": [101, 102, 103],
-            "product_name": ["Laptop", "Mobile", "Headphones"],
-            "categoty": ["Electronics", "Electronics", "Accessories"],
-            "price": [50000, 30000, 3000],
+            "product_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+            "product_name": [
+                "Laptop",
+                "Mobile",
+                "Headphones",
+                "Smartwatch",
+                "Tablet",
+                "Keyboard",
+                "Mouse",
+                "Monitor",
+                "Speaker",
+                "Webcam",
+            ],
+            "categoty": [
+                "Electronics",
+                "Electronics",
+                "Accessories",
+                "Wearables",
+                "Electronics",
+                "Accessories",
+                "Accessories",
+                "Electronics",
+                "Accessories",
+                "Accessories",
+            ],
+            "price": [50000, 30000, 3000, 12000, 25000, 2500, 1500, 18000, 4500, 6000],
         }
     )
 
@@ -38,10 +60,26 @@ def _demo_products() -> pd.DataFrame:
 def _demo_sales() -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "customer_id": [1, 2, 3, 1, 2],
-            "product_id": [101, 102, 103, 102, 101],
-            "quantity": [1, 2, 3, 1, 2],
-            "sale_date": ["2024-01-10", "2024-01-12", "2024-02-05", "2024-02-20", "2024-03-01"],
+            "customer_id": [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
+            "product_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 102, 105, 108, 109, 103],
+            "quantity": [1, 2, 3, 1, 1, 4, 2, 1, 3, 2, 1, 2, 1, 2, 4],
+            "sale_date": [
+                "2024-01-10",
+                "2024-01-12",
+                "2024-02-05",
+                "2024-02-14",
+                "2024-02-20",
+                "2024-02-28",
+                "2024-03-01",
+                "2024-03-08",
+                "2024-03-15",
+                "2024-03-22",
+                "2024-04-02",
+                "2024-04-10",
+                "2024-04-18",
+                "2024-05-03",
+                "2024-05-15",
+            ],
         }
     )
 
